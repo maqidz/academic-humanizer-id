@@ -1,124 +1,155 @@
 ---
 name: academic-humanizer-id
+version: 1.0.0
 description: >-
-  Menghilangkan ciri tulisan AI, frasa klise, kalke terjemahan Inggris-Indonesia,
-  nominalisasi bertumpuk, dan klaim berlebihan dari naskah akademik berbahasa
-  Indonesia (skripsi, tesis, disertasi, artikel jurnal Sinta/Scopus, tanggapan
-  reviewer, dan proposal hibah BIMA/BRIN/LPDP) sambil mempertahankan suara
-  ilmiah penulis, kaidah EYD V/KBBI, sitasi, angka, rumus, dan ketepatan bukti.
-  Gunakan skill ini ketika pengguna meminta untuk menghumanisasi, memoles,
-  menyunting, menghilangkan kesan AI, atau merapikan teks akademik berbahasa
-  Indonesia.
+  Meningkatkan kejelasan dan suara ilmiah tulisan akademik berbahasa Indonesia
+  berbantuan AI (artikel jurnal Sinta/Scopus, skripsi, tesis, disertasi,
+  tanggapan reviewer) serta proposal hibah (BIMA Kemdiktisaintek, RIIM BRIN,
+  LPDP Rispro, maupun NSF/NIH): menjaga konvensi ilmiah dan kaidah EYD V/KBBI,
+  menyelaraskan klaim dengan bukti (dan kelayakan pada proposal), serta
+  menyesuaikan gaya tulis penulis. Tidak pernah mengubah angka, hasil statistik,
+  rumus, atau sitasi, dan bukan alat untuk menghindari pengungkapan penggunaan
+  AI. Gunakan saat menyunting draf akademik atau proposal hibah.
+license: MIT
+compatibility: antigravity claude-code codex morphmind opencode
+allowed-tools:
+  - Read
+  - Write
+  - Edit
+  - Grep
+  - Glob
+  - AskUserQuestion
 ---
 
-# Academic Humanizer (Bahasa Indonesia)
+# Academic Humanizer (ID)
 
-Sunting naskah akademik dan proposal hibah berbahasa Indonesia agar terbaca
-seperti tulisan peneliti manusia yang jernih, ringkas, dan berdisiplin ilmiah
-— bukan terjemahan kaku atau pola generik AI.
-
-> **Batas Integritas (Wajib Dipatuhi):** Skill ini adalah alat penyuntingan
-> kejelasan dan ketepatan ilmiah, bukan alat kecurangan akademik atau penghindar
-> detektor AI. **Jangan pernah** mengarang atau mengubah angka, nilai statistik
-> (*p-value*, F1, akurasi, ukuran sampel), sitasi, nama penulis, persamaan
-> matematika, simbol, atau kesimpulan eksperimen. Jangan pernah memfabrikasi
-> bukti agar klaim tampak lebih kuat.
+Meningkatkan kejelasan, ketepatan, dan suara ilmiah tulisan *akademik*
+berbantuan AI dalam Bahasa Indonesia (serta mendukung istilah/naskah bilingual
+ID–EN) sambil menjaga ketelitian berbasis bukti yang dituntut karya ilmiah dan
+menyelaraskannya dengan gaya tulis penulis sendiri. Skill ini menjaga setiap
+angka, hasil, rumus, dan sitasi tetap utuh, dan **bukan** alat untuk
+menghindari kebijakan pengungkapan penggunaan AI (*AI-use disclosure*).
 
 ---
 
-## Alur Kerja Utama: Baca -> Audit -> Tulis Ulang -> Laporkan
+## Prinsip Integritas (Wajib Dipatuhi)
 
-Selalu jalankan empat langkah berikut secara berurutan kecuali pengguna secara
-eksplisit hanya meminta satu tahap (misalnya: *"audit saja"*).
+1. **Jangan pernah mengubah data:** Angka, persentase, *p-value*, interval
+   kepercayaan, ukuran sampel (*n*), skor evaluasi (F1, akurasi, RMSE, AUC),
+   rumus matematika, simbol, dan hasil eksperimen harus tetap sama persis.
+2. **Jangan pernah mengubah sitasi & markup:** Pertahankan `\cite{}`, `\ref{}`,
+   `\label{}`, format sitasi APA/IEEE/Chicago, tautan Markdown, catatan kaki,
+   dan isi tabel secara utuh.
+3. **Jangan pernah memfabrikasi bukti:** Jika draf memuat klaim tanpa metrik
+   pendukung (misalnya *"meningkat drastis"*), turunkan klaimnya dan sisipkan
+   `[PENULIS: masukkan angka/metrik pasti]` daripada mengarang angka.
+4. **Hormati suara penulis:** Jika pengguna menyediakan contoh tulisan
+   sebelumnya, tiru ritme kalimat, sudut pandang, dan gaya *hedging*-nya.
 
-### Langkah 1: Baca & Klasifikasi
-1. Identifikasi **jenis naskah**:
-   - Bagian artikel jurnal / prosiding (Abstrak, Pendahuluan, Tinjauan Pustaka, Metode, Hasil & Pembahasan, Kesimpulan)
-   - Bab skripsi, tesis, atau disertasi
-   - Surat tanggapan reviewer (*rebuttal* / *response to reviewers*)
-   - Proposal hibah penelitian (mengaktifkan **Layer 6: Mode Proposal Hibah**)
-2. Identifikasi **target publikasi / gaya selingkung** (misalnya: pedoman skripsi/tesis kampus, Jurnal Sinta 1–6, prosiding nasional, atau skema hibah BIMA/BRIN/LPDP).
-3. Jika pengguna melampirkan contoh tulisan sebelumnya, catat pola panjang kalimat, pilihan pronomina (*penelitian ini*, *penulis*, *kami*, atau kalimat pasif), serta tingkat kehati-hatian (*hedging*) untuk diselaraskan pada Layer 5.
-4. Pertahankan seluruh markup struktural (`\cite{}`, `\ref{}`, `\label{}`, `$...$`, tautan Markdown, catatan kaki, isi tabel) secara persis, kecuali memperbaiki tanda baca yang keliru di sekitarnya.
+---
 
-### Langkah 2: Audit (Diagnosis Awal)
-Sebelum menulis ulang, pindai teks melewati enam layer dan tampilkan daftar
-temuan konkret secara ringkas:
-- **Lokasi** (paragraf / cuplikan kalimat)
-- **Layer & Pola** (misalnya: `L1: kalke terjemahan`, `L1: em-dash`, `L2: pembuka klise`, `L4: klaim melebihi bukti`)
-- **Status Bukti** (khusus klaim empiris: *Didukung*, *Berlebihan*, atau *Metrik hilang — butuh input penulis*)
-- **Rencana Perbaikan**
+## Alur Kerja: Baca → Audit → Tulis Ulang → Laporkan
 
-Jika naskah sangat panjang (misalnya satu bab penuh), rangkum pola berulang
-utama dan soroti bagian paling berdampak terlebih dahulu.
+Jalankan keempat tahap berikut secara berurutan kecuali pengguna secara
+eksplisit hanya meminta satu tahap (misalnya *"audit saja"*).
 
-### Langkah 3: Tulis Ulang (Enam Layer)
-Terapkan keenam layer berikut sambil menjaga seluruh angka, sitasi, simbol, dan
-definisi teknis tetap utuh:
+### 1. Baca & Klasifikasi
+- Tentukan **jenis naskah**: artikel jurnal/prosiding, bab skripsi/tesis/disertasi,
+  tanggapan *reviewer* (*rebuttal*), atau proposal hibah (aktifkan **Layer 6**).
+- Tentukan **target publikasi / gaya selingkung**: Skripsi/Tesis/Disertasi,
+  Jurnal Sinta 1–6, Scopus/internasional, Prosiding, atau skema hibah
+  (BIMA, RIIM BRIN, LPDP Rispro, NSF/NIH).
+- Jika ada contoh tulisan penulis (*writing sample*), catat rata-rata panjang
+  kalimat, pilihan pronomina (*penelitian ini*, *kami*, atau pasif), dan
+  kepadatan transisi.
 
-1. **Layer 1 — Katalog Ciri AI Umum (Bahasa Indonesia)**:
-   Hapus kosakata klise AI (*menyelami, menggarisbawahi, lanskap, permadani,
-   bukti nyata, sinergi, holistik, komprehensif tanpa cakupan, krusial, vital,
-   mulus*), kalke terjemahan Inggris-Indonesia (*"adalah penting untuk..."*,
-   *"memainkan peran kunci"*), nominalisasi bertumpuk, paralelisme negatif
-   (*"bukan hanya sekadar X, melainkan juga Y"*), ekor partisipial terjemahan
-   (*"..., yang menyoroti pentingnya..."*), transisi mekanis berulang
-   (*"Selain itu,", "Lebih lanjut,"*), serta **tanda pisah panjang (`—` /
-   em-dash)** yang diganti dengan koma, titik dua, tanda kurung, atau dua
-   kalimat terpisah.
-   -> Katalog lengkap: [katalog-ciri-ai-id.md](./references/katalog-ciri-ai-id.md)
+### 2. Audit (Diagnosis Sebelum Mengubah Teks)
+Pindai naskah melewati enam layer dan tampilkan tabel audit singkat:
 
-2. **Layer 2 — Ciri AI Khusus Akademik Indonesia**:
-   Ganti pembuka klise (*"Di era globalisasi/digitalisasi saat ini..."*,
-   *"Dalam beberapa tahun terakhir..."*), klaim kebaruan kosong
-   (*"Sepengetahuan penulis, ini adalah penelitian pertama..."*), penguat tanpa
-   bukti (*"pengujian ekstensif"*, *"peningkatan signifikan"* tanpa uji
-   statistik), *hype* masa depan (*"membuka jalan bagi paradigma baru"*),
-   penumpukan sitasi tanpa sintesis, dan penanda bagian yang bertele-tele.
-   -> Katalog & contoh perbaikan: [katalog-ciri-ai-id.md](./references/katalog-ciri-ai-id.md)
+| Lokasi | Layer & Pola | Status Bukti | Rencana Perbaikan |
+| :--- | :--- | :--- | :--- |
+| Paragraf 1, Kal. 1 | `L2: Pembuka klise era` | N/A | Buka langsung dengan celah riset konkret |
+| Paragraf 1, Kal. 2 | `L1: Em-dash & kalke` | N/A | Hapus `—`, ubah struktur lebih lugas |
+| Paragraf 1, Kal. 3 | `L4: Klaim melebihi bukti` | Berlebihan (*membuktikan*) | Ganti dengan *menunjukkan secara empiris* + metrik |
 
-3. **Layer 3 — Pelestarian Konvensi Ilmiah & EYD V / KBBI**:
-   Jangan menghapus elemen akademik yang sah. Pertahankan *hedging* berbasis
-   bukti (*mengindikasikan, sejalan dengan, dalam cakupan sampel ini*), kalimat
-   pasif yang wajar pada Metode Penelitian, istilah teknis baku, serta terapkan
-   kaidah EYD V (pembedaan `di-` imbuhan vs `di` kata depan, huruf miring untuk
-   istilah asing yang belum diserap, tanda baca baku).
-   -> Panduan lengkap: [konvensi-kalibrasi-id.md](./references/konvensi-kalibrasi-id.md)
+### 3. Tulis Ulang (Enam Layer)
+Terapkan seluruh layer di bawah ini tanpa mengorbankan ketepatan ilmiah.
 
-4. **Layer 4 — Kalibrasi Klaim ↔ Bukti**:
-   Pastikan kekuatan kata kerja tidak pernah melampaui jenis bukti yang ada.
-   Ganti besaran kabur (*"jauh lebih baik"*, *"meningkat drastis"*) dengan
-   angka aktual dari draf; jika angka belum tersedia, turunkan klaim dan
-   sisipkan `[PENULIS: masukkan angka/metrik pasti]` tanpa mengarang data.
-   -> Tangga kata kerja & contoh: [konvensi-kalibrasi-id.md](./references/konvensi-kalibrasi-id.md)
-
-5. **Layer 5 — Kalibrasi Gaya, Ritme, & Target Publikasi**:
-   Sesuaikan laras bahasa dengan target (skripsi/tesis/disertasi, jurnal Sinta,
-   prosiding, atau tanggapan reviewer) dan contoh tulisan penulis jika ada.
-   Variasikan panjang kalimat agar tidak terjebak irama monoton khas AI.
-   -> Profil publikasi: [konvensi-kalibrasi-id.md](./references/konvensi-kalibrasi-id.md)
-
-6. **Layer 6 — Mode Proposal Hibah Indonesia** *(aktifkan hanya untuk proposal hibah)*:
-   Berbeda dari artikel jurnal, proposal hibah perlu menunjukkan visi dan
-   urgensi yang kuat sekaligus kelayakan teknis. Pertahankan ambisi riset yang
-   terukur, optimalkan halaman pertama (Ringkasan/Urgensi), tautkan Peta Jalan
-   (*Roadmap*) ke rekam jejak pengusul, selaraskan target TKT/TRL dan Luaran
-   Wajib/Tambahan (BIMA, BRIN, LPDP Rispro), serta sertakan mitigasi risiko.
-   -> Protokol proposal: [mode-proposal-hibah-id.md](./references/mode-proposal-hibah-id.md)
-
-### Langkah 4: Laporkan (Hasil & Ringkasan Perubahan)
-Sajikan keluaran dalam empat bagian singkat:
-1. **Ringkasan Audit**: Daftar ringkas pola AI dan klaim berlebihan yang ditemukan.
-2. **Teks Hasil Revisi**: Naskah bersih siap pakai (mempertahankan markup LaTeX/Markdown jika ada).
-3. **Catatan Perubahan (*Changelog*)**: Poin singkat dikelompokkan menjadi:
+### 4. Laporkan (Keluaran & Catatan Perubahan)
+Sajikan keluaran dalam format berikut:
+1. **Ringkasan Audit** (tabel/poin temuan utama)
+2. **Teks Hasil Revisi** (siap salin, markup LaTeX/Markdown utuh)
+3. **Catatan Perubahan (*Changelog*)**:
    - Pola AI, kalke terjemahan, & pengisi (*filler*) yang dihapus
-   - Klaim yang dikalibrasi terhadap bukti (beserta daftar tanda `[PENULIS: ...]` jika ada)
-   - Penyesuaian gaya, ritme kalimat, dan kaidah EYD V
-4. **Verifikasi Integritas**: Nyatakan secara eksplisit bahwa seluruh angka, sitasi, rumus, dan simbol teknis tetap utuh tanpa perubahan.
+   - Klaim yang dikalibrasi terhadap bukti (+ daftar `[PENULIS: ...]` jika ada)
+   - Penyesuaian gaya, ritme kalimat, dan kaidah EYD V/KBBI
+4. **Verifikasi Integritas**: Konfirmasi eksplisit bahwa seluruh angka, sitasi,
+   rumus, dan simbol teknis tidak berubah.
 
 ---
 
-## Contoh Singkat Sebelum & Sesudah
+## Arsitektur Enam Layer
+
+### Layer 1: Katalog Ciri AI Umum (Bahasa Indonesia)
+Hapus pola mekanis, kosakata klise AI, dan kalke terjemahan Inggris–Indonesia
+(katalog lengkap: [katalog-ciri-ai-id.md](./references/katalog-ciri-ai-id.md)):
+
+- **Kosakata klise AI:** *menyelami, menggarisbawahi, menyoroti (berlebihan),
+  lanskap (metaforis), permadani/jalinan, bukti nyata, ranah, paradigma (tanpa
+  dasar teoretis), sinergi, holistik (tanpa definisi), komprehensif (tanpa
+  cakupan), krusial, vital, transformatif, revolusioner, mulus (seamless)*.
+- **Kalke terjemahan Inggris–Indonesia:**
+  - *"Adalah penting untuk dicatat bahwa..."* → *"Perlu dicatat bahwa..."* atau hapus pembukanya.
+  - *"Memainkan peran kunci/penting dalam..."* → *"Berperan dalam..."* / *"Memengaruhi..."*.
+  - *"...yang mana..."* / *"...di mana..."* (bukan tempat) → *"...yang..."*, *"...ketika..."*, atau pecah kalimat.
+  - *"Berdasarkan fakta bahwa..."* → *"Karena..."* / *"Mengingat..."*.
+- **Nominalisasi bertumpuk:** *"Pelaksanaan pengoptimalan pemrosesan dilakukan guna pencapaian peningkatan akurasi"* → *"Proses dioptimalkan untuk meningkatkan akurasi."*
+- **Tanda pisah panjang (`—` / em-dash):** Hapus seluruh *em-dash*; ganti dengan koma, tanda kurung, titik dua, atau dua kalimat.
+- **Paralelisme negatif:** *"bukan hanya sekadar X, melainkan juga Y"* → nyatakan langsung kedua poin secara konkret.
+- **Ekor partisipial terjemahan:** *"..., yang menyoroti pentingnya..."*, *"..., sehingga membuka jalan bagi..."* → potong atau jadikan kalimat temuan tersendiri.
+- **Transisi mekanis berulang:** Hindari mengawali setiap kalimat dengan *"Selain itu,"*, *"Lebih lanjut,"*, *"Di samping itu,"*, *"Pada akhirnya,"*.
+
+### Layer 2: Ciri AI Khusus Akademik Indonesia
+- **Pembuka klise:** Ganti *"Di era globalisasi/digitalisasi saat ini..."* atau *"Dalam beberapa tahun terakhir, X telah menarik perhatian besar..."* dengan masalah spesifik atau celah riset.
+- **Klaim kebaruan kosong:** Hindari *"Sepengetahuan penulis, ini adalah penelitian pertama..."* kecuali terverifikasi; jelaskan keterbatasan studi terdahulu dan kontribusi spesifik.
+- **Penguat tanpa ukuran:** Ganti *"pengujian ekstensif"*, *"evaluasi menyeluruh"*, *"peningkatan signifikan"* (tanpa *p-value*) dengan jumlah dataset dan angka aktual.
+- **Hiperbola masa depan:** Hapus *"membuka jalan bagi paradigma baru"*, *"membuka babak baru"*; nyatakan batasan atau langkah riset lanjutan yang nyata.
+- **Penumpukan sitasi (*citation dumping*):** Ubah *"Banyak metode telah diusulkan [1–6]"* menjadi pengelompokan berbasis mekanisme/keterbatasan.
+- **Penanda bagian bertele-tele:** Ubah *"Pada bagian ini, kami akan menyelami rincian metodologi..."* menjadi *"Bagian 3 menguraikan formulasi metode dan skenario uji."*
+
+### Layer 3: Pelestarian Konvensi Ilmiah & EYD V / KBBI
+Jangan menghapus konvensi ilmiah yang sah (panduan lengkap: [konvensi-kalibrasi-id.md](./references/konvensi-kalibrasi-id.md)):
+- **Pertahankan *hedging* berbasis bukti:** *mengindikasikan, sejalan dengan, dalam cakupan sampel ini, pada kondisi pengujian tersebut*.
+- **Pertahankan kalimat pasif wajar di Metode:** *"Sampel disentrifugasi pada 3.000 rpm selama 10 menit"*.
+- **Pertahankan istilah teknis baku:** *signifikan secara statistik*, *robustness*, *focal loss*, *loss landscape*.
+- **Terapkan EYD V & KBBI:** bedakan `di` kata depan (*di lapangan, di atas*) vs `di-` imbuhan pasif (*dianalisis, dilakukan*); cetak miring istilah asing yang belum diserap (*overfitting, p-value*); gunakan ejaan baku (*analisis, sistem, metode, efektivitas, praktik, risiko, objek, subjek, hipotesis*).
+
+### Layer 4: Kalibrasi Klaim ↔ Bukti
+Kekuatan kata kerja tidak boleh melampaui jenis bukti dalam draf:
+
+| Jenis Bukti | Kata Kerja yang Tepat | Hindari |
+| :--- | :--- | :--- |
+| Pembuktian matematis formal | *membuktikan, menjamin, berlaku bahwa* | — |
+| Eksperimen terkontrol / kausal | *menunjukkan, menurunkan/meningkatkan sebesar X* | *membuktikan mutlak, menuntaskan* |
+| Evaluasi *benchmark* / komputasi | *meningkatkan [metrik] sebesar X pada [dataset]* | *mengungguli semua metode* |
+| Observasional / korelasional / survei | *berasosiasi dengan, berkorelasi dengan, mengindikasikan* | *menyebabkan, menentukan, membuktikan* |
+| Studi kasus / kualitatif | *menggambarkan, menunjukkan indikasi pada kasus ini* | *membuktikan secara umum* |
+
+### Layer 5: Kalibrasi Gaya, Ritme, & Target Publikasi
+- **Skripsi / Tesis / Disertasi:** Bahasa Indonesia baku EYD V, impersonal (*"Penelitian ini..."*), runtut, bebas hiperbola.
+- **Jurnal Sinta 1–6 / Prosiding:** Ringkas, padat, pembukaan langsung ke celah penelitian, hasil kuantitatif jelas, pembahasan terhubung ke literatur.
+- **Tanggapan Reviewer (*Rebuttal*):** Sopan, lugas, langsung merujuk lokasi revisi (bagian/halaman/tabel), tanpa pujian berlebihan.
+- **Variasi ritme kalimat:** Pecah deretan 4–6 kalimat seragam (22–30 kata) dengan memadukan kalimat deklaratif pendek (8–15 kata) dan analitis menengah (18–26 kata).
+
+### Layer 6: Mode Proposal Hibah *(Aktif Khusus Proposal Pendanaan)*
+Untuk proposal hibah (BIMA Kemdiktisaintek, RIIM BRIN, LPDP Rispro, hibah internal, atau NSF/NIH; detail: [mode-proposal-hibah-id.md](./references/mode-proposal-hibah-id.md)):
+- **Keunggulan halaman pertama:** Ringkasan dan Urgensi langsung memuat masalah nyata, gagasan utama, tujuan terukur, kesiapan tim, dan target luaran.
+- **Klaim ↔ Kelayakan (*Feasibility*):** Tautkan setiap target ambisius ke data pendahuluan, Peta Jalan (*Roadmap*) rekam jejak tim, target TKT/TRL, tonggak capaian (*milestones*), dan mitigasi risiko. Jika jangkar kelayakan belum ada, sisipkan `[PENULIS: tautkan ke data pendahuluan atau mitigasi risiko]`.
+- **Hapus retorika proposal kosong:** Ganti *"berpotensi merevolusi sektor X"* dengan hambatan spesifik dan pengguna sasaran; ganti *"tim kami memiliki posisi unik"* dengan bukti publikasi, dataset, atau fasilitas nyata.
+
+---
+
+## Contoh Sebelum & Sesudah
 
 **Sebelum (sarat ciri AI & klaim berlebihan):**
 > Di era digitalisasi saat ini, deteksi ujaran kebencian di media sosial telah menarik perhatian yang sangat besar. Dalam penelitian ini, kami mengusulkan pendekatan inovatif—dengan memanfaatkan mekanisme pembobotan adaptif—dan membuktikan melalui serangkaian pengujian komprehensif bahwa metode kami secara signifikan melampaui seluruh metode sebelumnya, sehingga membuka jalan bagi paradigma baru dalam moderasi konten.
